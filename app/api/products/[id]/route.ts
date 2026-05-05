@@ -4,7 +4,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 
-// Reuse the same validation logic for consistency
 const UpdateProductSchema = z.object({
   name: z.string().min(3, "Name is required"),
   description: z.string().min(10, "Description is required"),
@@ -22,7 +21,6 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 1. Auth Guard
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== 'ADMIN') {
       return new NextResponse('Unauthorized', { status: 401 });
@@ -33,33 +31,25 @@ export async function PUT(
       return NextResponse.json({ error: "Product ID is missing" }, { status: 400 });
     }
 
-    // 2. Validate Data
     const formData = await req.formData();
     const rawData = Object.fromEntries(formData.entries());
     const result = UpdateProductSchema.safeParse(rawData);
 
     if (!result.success) {
-      return NextResponse.json({ 
-        success: false, 
-        error: result.error.errors[0].message 
-      }, { status: 400 });
+      // ✅ Fix: use `issues` instead of `errors`
+      const firstError = result.error.issues[0]?.message || 'Validation failed';
+      return NextResponse.json({ success: false, error: firstError }, { status: 400 });
     }
 
-    // 3. Verify existence before update
-    const existingProduct = await prisma.product.findUnique({
-      where: { id }
-    });
-
+    const existingProduct = await prisma.product.findUnique({ where: { id } });
     if (!existingProduct) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // 4. Perform Update
     const product = await prisma.product.update({
       where: { id },
       data: {
         ...result.data,
-        // Ensure strings are trimmed
         name: result.data.name.trim(),
         description: result.data.description.trim(),
       },
@@ -70,7 +60,6 @@ export async function PUT(
       product,
       message: "Product updated successfully" 
     });
-
   } catch (error) {
     console.error(`[PRODUCT_PUT_ERROR]:`, error);
     return NextResponse.json({ 
