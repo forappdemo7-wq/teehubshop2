@@ -16,11 +16,11 @@ export interface Product {
   category: string;
   stock: number;
   imageUrl: string;
-  images?: string;
-  features?: string;
-  specs?: string;
-  createdAt: string;
-  updatedAt?: string;
+  images: string | null;
+  features: string | null;
+  specs: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface OrderItem {

@@ -13,12 +13,13 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { addItem } = useCart();
-  const { theme } = useTheme();   // ← get current theme colours
+  const { theme } = useTheme();
 
+  // ✅ product.createdAt is already a Date object – no need for new Date()
   const isNew = (() => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return new Date(product.createdAt) > sevenDaysAgo;
+    return product.createdAt > sevenDaysAgo;
   })();
 
   const isLowStock = product.stock > 0 && product.stock < 10;
@@ -58,26 +59,18 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             }}
           />
           {isNew && !isOutOfStock && (
-            <span
-              className="absolute top-2 left-2 sm:top-3 sm:left-3 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full z-10 shadow-md animate-pulse"
-              style={{ backgroundColor: theme.accent }}
-            >
+            <span className="absolute top-2 left-2 sm:top-3 sm:left-3 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full z-10 shadow-md animate-pulse" style={{ backgroundColor: theme.accent }}>
               NEW
             </span>
           )}
           {isLowStock && !isOutOfStock && (
-            <div
-              className="absolute top-2 left-2 sm:top-3 sm:left-3 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full shadow-md"
-              style={{ backgroundColor: theme.accent }}
-            >
+            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full shadow-md" style={{ backgroundColor: theme.accent }}>
               Low Stock
             </div>
           )}
           {isOutOfStock && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-              <span className="text-white font-bold px-3 py-1 bg-red-600 rounded-full text-sm shadow-lg">
-                Sold Out
-              </span>
+              <span className="text-white font-bold px-3 py-1 bg-red-600 rounded-full text-sm shadow-lg">Sold Out</span>
             </div>
           )}
         </div>
@@ -88,33 +81,23 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           {product.category}
         </span>
         <Link href={`/products/${product.id}`}>
-          <h3
-            className="text-sm sm:text-lg font-bold mt-1 mb-1 sm:mb-2 line-clamp-1 transition"
-            style={{ color: theme.text }}
-          >
+          <h3 className="text-sm sm:text-lg font-bold mt-1 mb-1 sm:mb-2 line-clamp-1 transition" style={{ color: theme.text }}>
             {product.name}
           </h3>
         </Link>
-        <p
-          className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2"
-          style={{ color: `${theme.text}cc` }} // slight transparency for description
-        >
+        <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2" style={{ color: `${theme.text}cc` }}>
           {product.description}
         </p>
-
         <div className="flex justify-between items-center mb-1">
           <span className="text-lg sm:text-2xl font-bold" style={{ color: theme.text }}>
             ${product.price.toFixed(2)}
           </span>
           {!isOutOfStock && (
-            <span
-              className={`text-[10px] sm:text-xs font-semibold ${isLowStock ? 'text-orange-600' : 'text-green-600'}`}
-            >
+            <span className={`text-[10px] sm:text-xs font-semibold ${isLowStock ? 'text-orange-600' : 'text-green-600'}`}>
               {isLowStock ? `Only ${product.stock} left!` : 'In Stock'}
             </span>
           )}
         </div>
-
         <button
           onClick={handleAddToCart}
           disabled={isOutOfStock}
