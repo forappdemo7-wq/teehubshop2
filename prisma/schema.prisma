@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders    Order[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  category    String
+  stock       Int
+  imageUrl    String
+  images      String?   // JSON string array of additional image URLs
+  features    String?   // JSON string array
+  specs       String?   // JSON string array
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  customerName  String
+  customerEmail String
+  customerPhone String
+  customerAddress String
+  total         Float
+  status        String      @default("PENDING")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  quantity    Int
+  price       Float
+  productName String
+  productId   String?
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  product     Product? @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+model Logo {
+  id        String   @id @default(cuid())
+  name      String   // e.g., "CSK", "MI"
+  imageUrl  String   // the logo URL
+  order     Int      @default(0) // for sorting
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Theme {
+  id         String   @id @default(cuid())
+  name       String   @default("default")
+  primary    String   @default("#2563eb")   // blue-600
+  secondary  String   @default("#1e40af")   // blue-800
+  accent     String   @default("#eab308")   // yellow-500
+  background String   @default("#f3f4f6")   // gray-50
+  text       String   @default("#111827")   // gray-900
+  cardBg     String   @default("#ffffff")
+  updatedAt  DateTime @updatedAt
+}

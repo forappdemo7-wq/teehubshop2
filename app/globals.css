@@ -1,0 +1,49 @@
+/* ========== CUSTOM THEME VARIABLES (admin‑controlled) ========== */
+:root {
+  --color-primary: #2563eb;      /* blue-600 */
+  --color-secondary: #1e40af;    /* blue-800 */
+  --color-accent: #eab308;       /* yellow-500 */
+  --color-background: #f3f4f6;   /* gray-50 */
+  --color-text: #111827;         /* gray-900 */
+  --color-card-bg: #ffffff;
+}
+
+/* ========== TAILWIND CSS v4 ========== */
+@import "tailwindcss";
+
+/* ========== TAILWIND THEME EXTENSIONS ========== */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ========== SYSTEM DARK MODE (keeps default Tailwind + your custom vars) ========== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* ========== BASE BODY STYLES ========== */
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ========== ANIMATIONS (team logos slider) ========== */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-scroll {
+  animation: scroll 25s linear infinite;
+}
+
+.group-hover\:animation-play-state\:paused:hover {
+  animation-play-state: paused;
+}
