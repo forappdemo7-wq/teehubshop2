@@ -37,6 +37,9 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
           priority
           sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-contain duration-700 ease-in-out group-hover:scale-105"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/fallback-image.svg';
+          }}
         />
       </div>
 

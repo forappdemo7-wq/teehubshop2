@@ -3,26 +3,39 @@
 import Link from 'next/link';
 import { useTheme } from '@/contexts/ThemeContext';
 import { 
-  EnvelopeIcon, 
-  PhoneIcon, 
-  MapPinIcon,
-  BoltIcon,
-  CreditCardIcon,
-  ShieldCheckIcon,
-  TruckIcon,
-  ArrowPathIcon
-} from '@heroicons/react/24/outline';
+  Mail, 
+  Phone, 
+  MapPin,
+  Flame,
+  CreditCard,
+  ShieldCheck,
+  Truck,
+  RefreshCw,
+  ArrowRight,
+  Sparkles
+} from 'lucide-react';
+import { useState } from 'react';
 
 export default function Footer() {
-  const { theme } = useTheme();          // ← get current theme colours
+  const { theme } = useTheme();
   const currentYear = new Date().getFullYear();
+  const [subscribed, setSubscribed] = useState(false);
+  const [email, setEmail] = useState('');
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setSubscribed(true);
+    setEmail('');
+  };
 
   const quickLinks = [
-    { name: 'Home', href: '/' },
+    { name: 'All Gear', href: '/' },
     { name: 'Jerseys', href: '/?category=Jersey' },
     { name: 'Pants', href: '/?category=Pants' },
     { name: 'Shorts', href: '/?category=Shorts' },
     { name: 'Sets', href: '/?category=Set' },
+    { name: 'Custom Studio', href: '/custom-jersey' },
   ];
 
   const supportLinks = [
@@ -34,64 +47,107 @@ export default function Footer() {
   ];
 
   const features = [
-    { icon: TruckIcon, text: 'Free Shipping on orders over $50' },
-    { icon: ArrowPathIcon, text: '30-Day Easy Returns' },
-    { icon: ShieldCheckIcon, text: 'Secure Payment' },
-    { icon: CreditCardIcon, text: '100% Authentic Products' },
-  ];
-
-  const socialLinks = [
-    { name: 'Facebook', href: '#', icon: 'https://img.icons8.com/ios-filled/50/ffffff/facebook-new.png' },
-    { name: 'Twitter', href: '#', icon: 'https://img.icons8.com/ios-filled/50/ffffff/twitter.png' },
-    { name: 'Instagram', href: '#', icon: 'https://img.icons8.com/ios-filled/50/ffffff/instagram-new.png' },
-    { name: 'YouTube', href: '#', icon: 'https://img.icons8.com/ios-filled/50/ffffff/youtube-play.png' },
+    { icon: Truck, title: 'Express Worldwide Shipping', desc: 'Free on all orders over $50' },
+    { icon: RefreshCw, title: '30-Day Easy Returns', desc: 'Hassle-free exchanges & refunds' },
+    { icon: ShieldCheck, title: 'Secure Encrypted Checkout', desc: 'Protected by 256-bit SSL' },
+    { icon: CreditCard, title: '100% Pro Authenticity', desc: 'Engineered for top performance' },
   ];
 
   return (
     <footer
-      className="text-white py-12 mt-auto border-t border-white/10"
-      style={{ backgroundColor: theme.secondary }}   // ← uses secondary colour from theme
+      className="text-white mt-auto border-t border-white/10 relative overflow-hidden"
+      style={{ backgroundColor: theme.secondary }}
     >
-      <div className="container mx-auto px-6">
-        {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          
-          {/* Brand Column */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-white/20 p-1.5 rounded-lg">
-                <BoltIcon className="h-5 w-5 text-white" />
+      {/* Top Features Ribbon */}
+      <div className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feat, idx) => (
+              <div key={idx} className="flex items-center gap-3.5">
+                <div 
+                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-inner"
+                  style={{ backgroundColor: `${theme.primary}50` }}
+                >
+                  <feat.icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-white leading-tight">{feat.title}</h4>
+                  <p className="text-[11px] text-white/70 mt-0.5">{feat.desc}</p>
+                </div>
               </div>
-              <span className="text-xl font-black italic tracking-tighter text-white uppercase">
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
+          
+          {/* Brand Column (2 cols wide on LG) */}
+          <div className="lg:col-span-2 space-y-4">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div 
+                className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md transition-transform group-hover:scale-105"
+                style={{ backgroundColor: theme.primary }}
+              >
+                <Flame className="w-5 h-5 text-white fill-white" />
+              </div>
+              <span className="text-2xl font-black italic tracking-tighter text-white uppercase">
                 TEE<span style={{ color: theme.accent }}>HUB</span>
               </span>
-            </div>
-            <p className="text-gray-200 text-sm mb-4">
-              Premium sports apparel for champions. Quality jerseys, pants, shorts, and sets for athletes who dare to win.
+            </Link>
+            
+            <p className="text-white/70 text-sm leading-relaxed max-w-sm">
+              Engineered sportswear crafted for champions. Premium matchday jerseys, training pants, performance shorts, and tailored sets designed to elevate your athletic legacy.
             </p>
-            <div className="flex gap-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.href}
-                  className="bg-white/10 p-2 rounded-lg hover:bg-white/20 transition"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={social.icon} alt={social.name} className="w-5 h-5" />
-                </a>
-              ))}
+
+            {/* Newsletter Subscription */}
+            <div className="pt-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-white/90 mb-2 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" style={{ color: theme.accent }} />
+                <span>Join the Athletes Club</span>
+              </p>
+              {subscribed ? (
+                <div className="bg-white/10 border border-white/20 p-3 rounded-xl text-xs text-white flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" style={{ color: theme.accent }} />
+                  <span>You're in! Watch your inbox for VIP drops.</span>
+                </div>
+              ) : (
+                <form onSubmit={handleSubscribe} className="flex gap-2 max-w-sm">
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="flex-1 bg-white/10 border border-white/20 px-3.5 py-2.5 rounded-xl text-xs text-white placeholder-white/50 focus:outline-none focus:border-white transition"
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-black flex items-center gap-1 hover:opacity-90 transition active:scale-95 shadow-md"
+                    style={{ backgroundColor: theme.accent }}
+                  >
+                    <span>Join</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </form>
+              )}
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-bold text-lg mb-4 text-white">Shop</h3>
-            <ul className="space-y-2">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-white/90 mb-4">Collection</h3>
+            <ul className="space-y-2.5">
               {quickLinks.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-gray-200 hover:text-white transition text-sm">
-                    {link.name}
+                <li key={link.name}>
+                  <Link 
+                    href={link.href} 
+                    className="text-xs sm:text-sm text-white/70 hover:text-white transition flex items-center gap-1.5 group"
+                  >
+                    <span className="text-white/30 group-hover:text-white transition-colors">›</span>
+                    <span>{link.name}</span>
                   </Link>
                 </li>
               ))}
@@ -100,12 +156,16 @@ export default function Footer() {
 
           {/* Support */}
           <div>
-            <h3 className="font-bold text-lg mb-4 text-white">Support</h3>
-            <ul className="space-y-2">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-white/90 mb-4">Assistance</h3>
+            <ul className="space-y-2.5">
               {supportLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-gray-200 hover:text-white transition text-sm">
-                    {link.name}
+                  <Link 
+                    href={link.href} 
+                    className="text-xs sm:text-sm text-white/70 hover:text-white transition flex items-center gap-1.5 group"
+                  >
+                    <span className="text-white/30 group-hover:text-white transition-colors">›</span>
+                    <span>{link.name}</span>
                   </Link>
                 </li>
               ))}
@@ -114,44 +174,34 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="font-bold text-lg mb-4 text-white">Contact Us</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <MapPinIcon className="h-5 w-5 text-gray-300 mt-0.5" />
-                <span className="text-gray-200 text-sm">123 Fashion Avenue, Suite 400<br />New York, NY 10001</span>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-white/90 mb-4">Headquarters</h3>
+            <ul className="space-y-3 text-xs sm:text-sm text-white/75">
+              <li className="flex items-start gap-2.5">
+                <MapPin className="w-4 h-4 text-white/50 flex-shrink-0 mt-0.5" />
+                <span>123 Athletic Boulevard, Suite 500<br />New York, NY 10001</span>
               </li>
-              <li className="flex items-center gap-3">
-                <PhoneIcon className="h-5 w-5 text-gray-300" />
-                <a href="tel:+18001234567" className="text-gray-200 hover:text-white text-sm">+1 (800) 123-4567</a>
+              <li className="flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-white/50 flex-shrink-0" />
+                <a href="tel:+18001234567" className="hover:text-white transition">+1 (800) 123-4567</a>
               </li>
-              <li className="flex items-center gap-3">
-                <EnvelopeIcon className="h-5 w-5 text-gray-300" />
-                <a href="mailto:support@teehubshop.com" className="text-gray-200 hover:text-white text-sm">support@teehubshop.com</a>
+              <li className="flex items-center gap-2.5">
+                <Mail className="w-4 h-4 text-white/50 flex-shrink-0" />
+                <a href="mailto:support@teehubshop.com" className="hover:text-white transition">support@teehubshop.com</a>
               </li>
             </ul>
           </div>
         </div>
-
-        {/* Features Bar */}
-        <div className="border-t border-white/15 pt-6 mb-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {features.map((feature, idx) => {
-              const Icon = feature.icon;
-              return (
-                <div key={idx} className="flex items-center justify-center gap-2 text-gray-200 text-xs md:text-sm">
-                  <Icon className="h-4 w-4 text-gray-300" />
-                  <span>{feature.text}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
         
-        {/* Copyright */}
-        <div className="border-t border-white/15 pt-6 text-center">
-          <p className="text-gray-300 text-xs">
-            &copy; {currentYear} TeeHubShop. All rights reserved. | Designed for athletes worldwide.
-          </p>
+        {/* Bottom copyright */}
+        <div className="border-t border-white/10 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/60">
+          <p>&copy; {currentYear} TeeHub Performance Gear. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-white transition">Terms</Link>
+            <span>•</span>
+            <Link href="/admin" className="hover:text-white transition">Admin Portal</Link>
+          </div>
         </div>
       </div>
     </footer>

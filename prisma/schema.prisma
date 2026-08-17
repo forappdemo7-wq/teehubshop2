@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,81 +8,309 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  role      String   @default("USER")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ─── User & Authentication ──────────────────────────────────────────────
 
-  orders    Order[]
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  image         String?
+  role          String    @default("USER") // USER | ADMIN
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime? // Soft delete
+
+  // Relations
+  orders        Order[]
+  carts         Cart[]
+  reviews       Review[]
+  wishlist      WishlistItem[]
+  accounts      Account[]
+  sessions      Session[]
+
+  @@index([email])
+  @@index([role])
+  @@index([deletedAt])
 }
+
+// ─── NextAuth Models (Optional but recommended) ──────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Categories ──────────────────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  order       Int       @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  products    Product[]
+
+  @@index([slug])
+  @@index([order])
+}
+
+// ─── Products ───────────────────────────────────────────────────────────
 
 model Product {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
+  slug        String    @unique
   description String
   price       Float
-  category    String
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   stock       Int
   imageUrl    String
-  images      String?   // JSON string array of additional image URLs
+  images      String?   // JSON string array
   features    String?   // JSON string array
   specs       String?   // JSON string array
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean   @default(true)
+  isFeatured  Boolean   @default(false)
 
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? // Soft delete
+
+  // Relations
   orderItems  OrderItem[]
+  reviews     Review[]
+  wishlist    WishlistItem[]
+  cartItems   CartItem[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([price])
+  @@index([deletedAt])
 }
+
+// ─── Orders ─────────────────────────────────────────────────────────────
 
 model Order {
-  id            String      @id @default(cuid())
-  orderNumber   String      @unique
-  customerName  String
-  customerEmail String
-  customerPhone String
+  id              String    @id @default(cuid())
+  orderNumber     String    @unique
+  customerName    String
+  customerEmail   String
+  customerPhone   String
   customerAddress String
-  total         Float
-  status        String      @default("PENDING")
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  total           Float
+  status          String    @default("PENDING") // PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+  paymentMethod   String?   // COD, STRIPE, PAYPAL
+  paymentStatus   String    @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
+  notes           String?
 
-  userId        String?
-  user          User?       @relation(fields: [userId], references: [id])
-  items         OrderItem[]
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime? // Soft delete
+
+  // Relations
+  items           OrderItem[]
+
+  @@index([orderNumber])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([deletedAt])
 }
 
+// ─── Order Items ────────────────────────────────────────────────────────
+
 model OrderItem {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   quantity    Int
-  price       Float
+  price       Float     // Price at time of order
   productName String
   productId   String?
   orderId     String
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  product     Product? @relation(fields: [productId], references: [id])
+  product     Product?  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
 
   @@map("order_items")
 }
-model Logo {
-  id        String   @id @default(cuid())
-  name      String   // e.g., "CSK", "MI"
-  imageUrl  String   // the logo URL
-  order     Int      @default(0) // for sorting
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+// ─── Cart ───────────────────────────────────────────────────────────────
+
+model Cart {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  items     CartItem[]
+
+  @@index([userId])
 }
+
+model CartItem {
+  id        String    @id @default(cuid())
+  quantity  Int
+  cartId    String
+  cart      Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([cartId])
+  @@index([productId])
+
+  @@map("cart_items")
+}
+
+// ─── Reviews ────────────────────────────────────────────────────────────
+
+model Review {
+  id        String    @id @default(cuid())
+  rating    Int       // 1-5
+  comment   String?
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  isVerified Boolean   @default(false)
+  isApproved Boolean   @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+  @@index([rating])
+  @@index([isApproved])
+
+  @@map("reviews")
+}
+
+// ─── Wishlist ───────────────────────────────────────────────────────────
+
+model WishlistItem {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+
+  @@map("wishlist_items")
+}
+
+// ─── Team Logos ─────────────────────────────────────────────────────────
+
+model Logo {
+  id        String    @id @default(cuid())
+  name      String
+  imageUrl  String
+  order     Int       @default(0)
+  isActive  Boolean   @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([isActive])
+  @@index([order])
+}
+
+// ─── Theme ──────────────────────────────────────────────────────────────
+
 model Theme {
-  id         String   @id @default(cuid())
-  name       String   @default("default")
-  primary    String   @default("#2563eb")   // blue-600
-  secondary  String   @default("#1e40af")   // blue-800
-  accent     String   @default("#eab308")   // yellow-500
-  background String   @default("#f3f4f6")   // gray-50
-  text       String   @default("#111827")   // gray-900
-  cardBg     String   @default("#ffffff")
-  updatedAt  DateTime @updatedAt
+  id         String    @id @default(cuid())
+  name       String    @default("default")
+  primary    String    @default("#2563eb")
+  secondary  String    @default("#1e40af")
+  accent     String    @default("#eab308")
+  background String    @default("#f3f4f6")
+  text       String    @default("#111827")
+  cardBg     String    @default("#ffffff")
+
+  updatedAt  DateTime  @updatedAt
+}
+
+// ─── Coupons / Discounts (Optional) ────────────────────────────────────
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  description String?
+  discountType String   @default("PERCENTAGE") // PERCENTAGE, FIXED
+  discountValue Float
+  minOrder    Float?
+  maxDiscount Float?
+  usageLimit  Int?
+  usedCount   Int       @default(0)
+  startsAt    DateTime
+  expiresAt   DateTime
+  isActive    Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@index([expiresAt])
 }

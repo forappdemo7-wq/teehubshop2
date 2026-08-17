@@ -45,7 +45,7 @@ export default async function RootLayout({
               <Navbar />
               
               {/* Main content area */}
-              <main className="flex-1 w-full pt-19 flex flex-col">
+              <main className="flex-1 pt-[68px] sm:pt-[76px]">
                 {children}
               </main>
               

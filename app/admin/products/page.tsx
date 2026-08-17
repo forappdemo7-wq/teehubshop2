@@ -2,11 +2,19 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import DeleteButton from '@/components/DeleteButton';
+import Image from 'next/image';
 
 export default async function AdminProductsPage() {
+  // Fetch products with category relation
   const products = await prisma.product.findMany({
     orderBy: { createdAt: 'desc' },
+    include: {
+      category: true, // ✅ Include category relation
+    },
   });
+
+  // Get total number of categories (for stats)
+  const totalCategories = await prisma.category.count();
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -41,7 +49,7 @@ export default async function AdminProductsPage() {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-zinc-100">
           <p className="text-sm text-zinc-500">Categories</p>
           <p className="text-4xl font-semibold text-zinc-900 mt-2">
-            {new Set(products.map(p => p.category)).size}
+            {totalCategories} {/* ✅ Use total categories count */}
           </p>
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-zinc-100">
@@ -70,11 +78,13 @@ export default async function AdminProductsPage() {
               {products.map((product) => (
                 <tr key={product.id} className="hover:bg-zinc-50 transition-colors group">
                   <td className="px-8 py-6">
-                    <div className="w-14 h-14 bg-zinc-100 rounded-2xl overflow-hidden border border-zinc-200">
-                      <img 
-                        src={product.imageUrl} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover" 
+                    <div className="w-14 h-14 bg-zinc-100 rounded-2xl overflow-hidden border border-zinc-200 relative">
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                        sizes="56px"
                       />
                     </div>
                   </td>
@@ -84,7 +94,7 @@ export default async function AdminProductsPage() {
                   </td>
                   <td className="px-8 py-6">
                     <span className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
-                      {product.category}
+                      {product.category?.name || 'Uncategorized'} {/* ✅ Use category relation */}
                     </span>
                   </td>
                   <td className="px-8 py-6 font-semibold text-zinc-900">

@@ -2,13 +2,20 @@
 
 import { useState } from 'react';
 import { 
-  MagnifyingGlassIcon, 
-  CubeIcon, 
-  CalendarIcon, 
-  CurrencyDollarIcon, 
-  UserIcon, 
-  EnvelopeIcon 
-} from '@heroicons/react/24/outline';
+  Search, 
+  Package, 
+  Calendar, 
+  DollarSign, 
+  User, 
+  Mail,
+  Truck,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  Sparkles,
+  ArrowRight
+} from 'lucide-react';
+import Link from 'next/link';
 
 interface OrderInfo {
   id: string;
@@ -44,178 +51,206 @@ export default function TrackOrderPage() {
         setError(data.error || 'Failed to fetch orders');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('An error occurred while fetching orders. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const getStatusDetails = (status: string) => {
-    const map: Record<string, { label: string; color: string; bg: string; border: string }> = {
+    const map: Record<string, { label: string; icon: any; color: string; bg: string; border: string }> = {
       PENDING: {
-        label: 'Pending',
-        color: 'text-yellow-800',
-        bg: 'bg-yellow-100',
-        border: 'border-yellow-200'
+        label: 'Order Placed',
+        icon: Clock,
+        color: 'text-amber-800',
+        bg: 'bg-amber-50',
+        border: 'border-amber-200'
       },
       PROCESSING: {
-        label: 'Processing',
+        label: 'In Production',
+        icon: Sparkles,
         color: 'text-blue-800',
-        bg: 'bg-blue-100',
+        bg: 'bg-blue-50',
         border: 'border-blue-200'
       },
       SHIPPED: {
-        label: 'Shipped',
+        label: 'Dispatched & On the Way',
+        icon: Truck,
         color: 'text-purple-800',
-        bg: 'bg-purple-100',
+        bg: 'bg-purple-50',
         border: 'border-purple-200'
       },
       DELIVERED: {
         label: 'Delivered',
-        color: 'text-green-800',
-        bg: 'bg-green-100',
-        border: 'border-green-200'
+        icon: CheckCircle2,
+        color: 'text-emerald-800',
+        bg: 'bg-emerald-50',
+        border: 'border-emerald-200'
       },
       CANCELLED: {
         label: 'Cancelled',
+        icon: AlertCircle,
         color: 'text-red-800',
-        bg: 'bg-red-100',
+        bg: 'bg-red-50',
         border: 'border-red-200'
       },
     };
     return map[status] || {
       label: status,
-      color: 'text-gray-800',
-      bg: 'bg-gray-100',
-      border: 'border-gray-200'
+      icon: Package,
+      color: 'text-slate-800',
+      bg: 'bg-slate-50',
+      border: 'border-slate-200'
     };
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4">
-      <div className="container mx-auto max-w-5xl">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Track Your Order</h1>
-          <p className="text-gray-600 text-lg">Enter your order number or email to get real‑time updates</p>
+    <div className="min-h-screen py-12 px-4" style={{ backgroundColor: 'var(--color-background)' }}>
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {/* Header section */}
+        <div className="text-center space-y-2 max-w-xl mx-auto">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
+            <Truck className="w-3.5 h-3.5" />
+            <span>Real-Time Dispatch Tracker</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight" style={{ color: 'var(--color-text)' }}>
+            Track Your Order
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Enter your order number (e.g. ORD-...) or the email address used during checkout.
+          </p>
         </div>
 
-        {/* Search Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 mb-10 border border-gray-200">
-          <div className="flex flex-col sm:flex-row gap-4">
+        {/* Search Bar Card */}
+        <div 
+          className="rounded-3xl shadow-xl border border-black/5 p-4 sm:p-6"
+          style={{ backgroundColor: 'var(--color-card-bg)' }}
+        >
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
-              <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Order number (e.g., ORD-...) or email"
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm text-gray-900 placeholder-gray-500"
+                placeholder="Order reference (ORD-...) or customer email"
+                className="w-full pl-11 pr-4 py-3.5 text-xs font-bold rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 transition"
               />
             </div>
             <button
               onClick={handleSearch}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-xl hover:opacity-95 active:scale-95 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ backgroundColor: 'var(--color-primary)' }}
             >
               {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <MagnifyingGlassIcon className="h-5 w-5" /> Search
+                  <Search className="w-4 h-4" />
+                  <span>Track Order</span>
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Notice */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-center mb-6 shadow-sm">
+          <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center">
             {error}
           </div>
         )}
 
-        {/* Orders List */}
+        {/* Orders Results */}
         {orders.length > 0 && (
           <div className="space-y-6">
             {orders.map((order) => {
               const status = getStatusDetails(order.status);
+              const StatusIcon = status.icon;
               return (
-                <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-                  {/* Header */}
-                  <div className="bg-gray-800 px-6 py-4">
-                    <div className="flex flex-wrap justify-between items-center gap-4">
-                      <div>
-                        <p className="text-sm text-gray-300">Order Number</p>
-                        <p className="font-mono font-bold text-xl text-white tracking-wider">{order.orderNumber}</p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className={`${status.bg} ${status.border} border rounded-full px-4 py-1.5`}>
-                          <span className={`text-sm font-bold ${status.color}`}>{status.label}</span>
-                        </div>
-                      </div>
+                <div 
+                  key={order.id} 
+                  className="rounded-3xl shadow-xl border border-black/5 overflow-hidden"
+                  style={{ backgroundColor: 'var(--color-card-bg)' }}
+                >
+                  {/* Card Header Bar */}
+                  <div className="p-6 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block">
+                        Order Reference
+                      </span>
+                      <p className="font-mono font-black text-lg text-white">
+                        {order.orderNumber}
+                      </p>
+                    </div>
+
+                    <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border ${status.bg} ${status.border} ${status.color}`}>
+                      <StatusIcon className="w-4 h-4" />
+                      <span className="text-xs font-black uppercase tracking-wider">{status.label}</span>
                     </div>
                   </div>
 
-                  {/* Body */}
+                  {/* Card Body */}
                   <div className="p-6 space-y-6">
-                    {/* Info Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-                      <div className="flex items-center gap-3">
-                        <CalendarIcon className="h-5 w-5 text-gray-500" />
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Placed On</p>
-                          <p className="font-semibold text-gray-900">{new Date(order.createdAt).toLocaleDateString('en-GB')}</p>
-                        </div>
+                    {/* Metadata 4-col */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-4 border-b border-black/5">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Placed Date</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <CurrencyDollarIcon className="h-5 w-5 text-gray-500" />
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Total Amount</p>
-                          <p className="font-bold text-2xl text-gray-900">${order.total.toFixed(2)}</p>
-                        </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Customer</span>
+                        <span className="text-xs font-bold text-slate-800 truncate block">
+                          {order.customerName}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <UserIcon className="h-5 w-5 text-gray-500" />
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Customer</p>
-                          <p className="font-semibold text-gray-900">{order.customerName}</p>
-                        </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Email</span>
+                        <span className="text-xs font-bold text-slate-800 truncate block">
+                          {order.customerEmail}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <EnvelopeIcon className="h-5 w-5 text-gray-500" />
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Email</p>
-                          <p className="font-medium text-gray-800 truncate">{order.customerEmail}</p>
-                        </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Amount</span>
+                        <span className="text-sm font-black text-slate-900">
+                          ${order.total.toFixed(2)}
+                        </span>
                       </div>
                     </div>
 
                     {/* Order Items */}
                     <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <CubeIcon className="h-5 w-5 text-gray-600" />
-                        <h3 className="font-bold text-gray-800 text-lg">Order Items</h3>
-                      </div>
-                      <div className="bg-gray-50 rounded-xl p-4 space-y-2 border border-gray-200">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-2">
+                        <Package className="w-4 h-4 text-slate-500" />
+                        <span>Included Gear & Kits</span>
+                      </h3>
+                      <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 divide-y divide-slate-200">
                         {order.items.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0">
+                          <div key={idx} className="flex justify-between items-center py-2.5 first:pt-0 last:pb-0">
                             <div>
-                              <span className="font-semibold text-gray-800">{item.productName}</span>
-                              <span className="text-gray-600 text-sm ml-2">x{item.quantity}</span>
+                              <span className="text-xs font-bold text-slate-900">{item.productName}</span>
+                              <span className="text-xs text-slate-500 font-medium ml-2">Qty: {item.quantity}</span>
                             </div>
-                            <span className="font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                            <span className="text-xs font-black text-slate-900">
+                              ${(item.price * item.quantity).toFixed(2)}
+                            </span>
                           </div>
                         ))}
                       </div>
                     </div>
+
                   </div>
                 </div>
               );
             })}
           </div>
         )}
+
       </div>
     </div>
   );

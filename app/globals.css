@@ -1,49 +1,68 @@
+@import "tailwindcss";
+
 /* ========== CUSTOM THEME VARIABLES (admin‑controlled) ========== */
 :root {
-  --color-primary: #2563eb;      /* blue-600 */
-  --color-secondary: #1e40af;    /* blue-800 */
-  --color-accent: #eab308;       /* yellow-500 */
-  --color-background: #f3f4f6;   /* gray-50 */
-  --color-text: #111827;         /* gray-900 */
-  --color-card-bg: #ffffff;
+  --color-primary: #2563eb;      /* Primary brand */
+  --color-secondary: #1e40af;    /* Secondary brand */
+  --color-accent: #f59e0b;       /* Accent highlight */
+  --color-background: #f8fafc;   /* Slate-50 background */
+  --color-text: #0f172a;         /* Slate-900 text */
+  --color-card-bg: #ffffff;      /* Pure white card */
 }
-
-/* ========== TAILWIND CSS v4 ========== */
-@import "tailwindcss";
 
 /* ========== TAILWIND THEME EXTENSIONS ========== */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-/* ========== SYSTEM DARK MODE (keeps default Tailwind + your custom vars) ========== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-inter, system-ui, sans-serif);
 }
 
 /* ========== BASE BODY STYLES ========== */
 body {
-  background: var(--color-background);
+  background-color: var(--color-background);
   color: var(--color-text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ========== ANIMATIONS (team logos slider) ========== */
-@keyframes scroll {
-  0% { transform: translateX(0); }
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.45);
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
 }
 
-.animate-scroll {
-  animation: scroll 25s linear infinite;
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
 }
 
-.group-hover\:animation-play-state\:paused:hover {
+.animate-marquee:hover {
   animation-play-state: paused;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 6s ease-in-out infinite;
 }
