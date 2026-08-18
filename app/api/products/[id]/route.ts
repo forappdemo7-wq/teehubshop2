@@ -1,70 +1,146 @@
-import { NextResponse } from 'next/server';
+// app/api/products/[id]/route.ts
 import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { z } from 'zod';
 
-const UpdateProductSchema = z.object({
-  name: z.string().min(3, "Name is required"),
-  description: z.string().min(10, "Description is required"),
-  price: z.coerce.number().positive("Price must be a positive number"),
-  stock: z.coerce.number().int().nonnegative("Stock cannot be negative"),
-  category: z.string().min(1, "Category is required"),
-  imageUrl: z.string().url("Main image URL is required"),
-  images: z.string().optional().default('[]'),
-  features: z.string().optional().default('[]'),
-  specs: z.string().optional().default('[]'),
-});
+// ─── Helper: Generate unique slug ──────────────────────────────────────
+async function generateUniqueSlug(baseName: string, excludeId?: string): Promise<string> {
+  let slug = baseName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
 
-export async function PUT(
-  req: Request, 
+  // Check uniqueness, exclude current product if updating
+  const existing = await prisma.product.findFirst({
+    where: {
+      slug,
+      id: { not: excludeId },
+    },
+  });
+  if (existing) {
+    slug = `${slug}-${Date.now()}`;
+  }
+  return slug;
+}
+
+// ─── GET Single Product ──────────────────────────────────────────────
+export async function GET(
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { category: true },
+    });
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+    return NextResponse.json(product);
+  } catch (error) {
+    console.error('GET product error:', error);
+    return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
+  }
+}
+
+// ─── PUT Update Product ──────────────────────────────────────────────
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // 1. Authenticate
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== 'ADMIN') {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
-    if (!id) {
-      return NextResponse.json({ error: "Product ID is missing" }, { status: 400 });
-    }
-
+    // 2. Parse and validate form data
     const formData = await req.formData();
-    const rawData = Object.fromEntries(formData.entries());
-    const result = UpdateProductSchema.safeParse(rawData);
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const price = parseFloat(formData.get('price') as string);
+    const stock = parseInt(formData.get('stock') as string);
+    const categoryName = formData.get('category') as string; // e.g., "Jersey"
+    const imageUrl = formData.get('imageUrl') as string;
+    const images = formData.get('images') as string || '[]';
+    const features = formData.get('features') as string || '[]';
+    const specs = formData.get('specs') as string || '[]';
 
-    if (!result.success) {
-      // ✅ Fix: use `issues` instead of `errors`
-      const firstError = result.error.issues[0]?.message || 'Validation failed';
-      return NextResponse.json({ success: false, error: firstError }, { status: 400 });
+    if (!name || !description || isNaN(price) || !categoryName || isNaN(stock) || !imageUrl) {
+      return NextResponse.json(
+        { error: 'All required fields must be filled' },
+        { status: 400 }
+      );
     }
 
+    // 3. Find category by name
+    const category = await prisma.category.findFirst({
+      where: { name: categoryName },
+    });
+    if (!category) {
+      return NextResponse.json(
+        { error: `Category "${categoryName}" not found` },
+        { status: 400 }
+      );
+    }
+
+    // 4. Generate unique slug (if name changed)
     const existingProduct = await prisma.product.findUnique({ where: { id } });
-    if (!existingProduct) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    let slug = existingProduct?.slug;
+    if (existingProduct && existingProduct.name !== name) {
+      slug = await generateUniqueSlug(name, id);
+    } else if (!slug) {
+      slug = await generateUniqueSlug(name, id);
     }
 
+    // 5. Update product
     const product = await prisma.product.update({
       where: { id },
       data: {
-        ...result.data,
-        name: result.data.name.trim(),
-        description: result.data.description.trim(),
+        name,
+        slug,
+        description,
+        price,
+        stock,
+        imageUrl,
+        images,
+        features,
+        specs,
+        categoryId: category.id, // ✅ Use categoryId, not category
       },
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      product,
-      message: "Product updated successfully" 
-    });
+    return NextResponse.json({ success: true, product });
   } catch (error) {
-    console.error(`[PRODUCT_PUT_ERROR]:`, error);
-    return NextResponse.json({ 
-      success: false, 
-      error: "Internal server error" 
-    }, { status: 500 });
+    console.error('PUT product error:', error);
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
+  }
+}
+
+// ─── DELETE Product ──────────────────────────────────────────────────
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await prisma.product.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('DELETE product error:', error);
+    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
   }
 }
