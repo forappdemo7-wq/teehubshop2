@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import AddToCartButton from '@/components/AddToCartButton';
@@ -11,11 +10,7 @@ import {
   Truck, 
   RotateCcw, 
   ChevronLeft, 
-  Sparkles,
-  CheckCircle2,
-  Star,
-  Package,
-  Clock
+  CheckCircle2
 } from 'lucide-react';
 
 interface PageProps {
@@ -33,7 +28,10 @@ function safeParse(data: string | null): string[] {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await prisma.product.findUnique({ 
+    where: { id },
+    include: { category: true },
+  });
 
   if (!product) return { title: 'Product Not Found | TeeHub' };
 
@@ -53,6 +51,9 @@ export default async function ProductPage({ params }: PageProps) {
 
   const product = await prisma.product.findUnique({
     where: { id },
+    include: {
+      category: true,
+    },
   });
 
   if (!product) notFound();
@@ -65,10 +66,18 @@ export default async function ProductPage({ params }: PageProps) {
   const isLowStock = product.stock > 0 && product.stock <= 5;
   const isOutOfStock = product.stock === 0;
 
+  // ─── Get category name safely ──────────────────────────────────────
+  const categoryName = product.category?.name || '';
+  const categoryDisplay = product.category?.name || 'Products';
+
   const relatedProducts = await prisma.product.findMany({
-  where: { categoryId: product.categoryId, id: { not: product.id } },
+    where: { 
+      categoryId: product.categoryId, 
+      id: { not: product.id } 
+    },
     take: 4,
     orderBy: { createdAt: 'desc' },
+    include: { category: true },
   });
 
   return (
@@ -78,11 +87,11 @@ export default async function ProductPage({ params }: PageProps) {
         {/* ─── Breadcrumb ─── */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
           <Link 
-            href={`/?category=${product.category}`}
+            href={`/?category=${categoryName}`}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Back to {product.category}s</span>
+            <span>Back to {categoryDisplay}</span>
           </Link>
           <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 bg-white/50 px-3 py-1 rounded-full border border-slate-200/50">
             SKU: {product.id.slice(0, 8).toUpperCase()}
@@ -113,7 +122,7 @@ export default async function ProductPage({ params }: PageProps) {
                     color: 'var(--color-primary)',
                   }}
                 >
-                  {product.category}
+                  {categoryDisplay}
                 </span>
                 <div className="flex items-center gap-1.5">
                   <div className={`w-2.5 h-2.5 rounded-full ${
@@ -213,16 +222,22 @@ export default async function ProductPage({ params }: PageProps) {
                 You May Also Like
               </h2>
               <Link 
-                href={`/?category=${product.category}`}
+                href={`/?category=${categoryName}`}
                 className="text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1"
               >
-                View all {product.category}s
+                View all {categoryDisplay}
                 <span className="text-lg">→</span>
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {relatedProducts.map((rp) => (
-                <ProductCard key={rp.id} product={{ ...rp, category: rp.category }} />
+                <ProductCard 
+                  key={rp.id} 
+                  product={{
+                    ...rp,
+                    category: rp.category?.name || 'Uncategorized',
+                  }} 
+                />
               ))}
             </div>
           </div>
