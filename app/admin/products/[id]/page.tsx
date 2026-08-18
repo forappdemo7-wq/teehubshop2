@@ -30,11 +30,18 @@ export default async function EditProductPage({ params }: PageProps) {
 
   if (!id) notFound();
 
+  // ✅ Fetch product with category relation
   const product = await prisma.product.findUnique({
     where: { id },
+    include: {
+      category: true, // Include the category relation
+    },
   });
 
   if (!product) notFound();
+
+  // ✅ Get category name safely
+  const categoryName = product.category?.name || '';
 
   return (
     <div className="min-h-screen bg-zinc-50/50 pb-20">
@@ -64,6 +71,11 @@ export default async function EditProductPage({ params }: PageProps) {
               <p className="text-zinc-500 mt-1 text-lg">
                 Modifying: <span className="font-semibold text-zinc-700">{product.name}</span>
               </p>
+              {categoryName && (
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Category: {categoryName}
+                </p>
+              )}
             </div>
           </div>
           
@@ -79,11 +91,6 @@ export default async function EditProductPage({ params }: PageProps) {
 
         {/* Form Container */}
         <div className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-200/60 p-8 md:p-12">
-          {/* 
-            Pass the product data. 
-            Ensure EditProductForm handles the parsing of features/specs 
-            from strings to arrays if your DB stores them as text.
-          */}
           <EditProductForm product={product} />
         </div>
       </div>

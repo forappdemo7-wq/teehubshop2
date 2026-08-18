@@ -24,11 +24,12 @@ export default function EditProductForm({ product }: { product: any }) {
     description: product.description,
     price: product.price,
     stock: product.stock,
-    category: product.category,
+    category: product.category?.name || product.category || '', // ✅ Handle both relation and string
     imageUrl: product.imageUrl,
     images: product.images,      // JSON string
     features: product.features,  // JSON string
     specs: product.specs,        // JSON string
+    isFeatured: product.isFeatured || false, // ✅ Added featured toggle
   };
 
   return <ProductForm initialData={initialData} onSubmit={handleSubmit} />;

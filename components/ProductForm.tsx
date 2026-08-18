@@ -18,6 +18,7 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
   const [specs, setSpecs] = useState<string[]>(['']);
   const [uploading, setUploading] = useState(false);
   const [galleryUploading, setGalleryUploading] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
   const newImageUrlRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -26,11 +27,13 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
       setGalleryImages(initialData.images ? JSON.parse(initialData.images || '[]') : []);
       setFeatures(initialData.features ? JSON.parse(initialData.features || '[]') : ['']);
       setSpecs(initialData.specs ? JSON.parse(initialData.specs || '[]') : ['']);
+      setIsFeatured(initialData.isFeatured || false);
     } else {
       setImageUrl('');
       setGalleryImages([]);
       setFeatures(['']);
       setSpecs(['']);
+      setIsFeatured(false);
     }
     setError('');
   }, [initialData]);
@@ -108,6 +111,7 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
     formData.set('images', JSON.stringify(galleryImages));
     formData.append('features', JSON.stringify(features.filter(f => f.trim())));
     formData.append('specs', JSON.stringify(specs.filter(s => s.trim())));
+    formData.append('isFeatured', isFeatured ? 'true' : 'false');
     try {
       if (onSubmit) {
         await onSubmit(formData);
@@ -239,6 +243,20 @@ export default function ProductForm({ initialData, onSubmit }: ProductFormProps)
           </div>
         ))}
         <button type="button" onClick={addSpec} className="text-blue-700 text-sm font-medium hover:underline">+ Add Item</button>
+      </div>
+
+      {/* ─── Featured Toggle ─── */}
+      <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
+        <input
+          type="checkbox"
+          id="isFeatured"
+          checked={isFeatured}
+          onChange={(e) => setIsFeatured(e.target.checked)}
+          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+        <label htmlFor="isFeatured" className="text-sm font-semibold text-gray-900 cursor-pointer">
+          Feature this product on the homepage
+        </label>
       </div>
 
       <button type="submit" disabled={loading || uploading || galleryUploading} className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white font-semibold py-4 rounded-2xl transition text-lg">

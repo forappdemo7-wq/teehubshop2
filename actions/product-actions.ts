@@ -39,12 +39,13 @@ export async function createProduct(formData: FormData) {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
     const price = parseFloat(formData.get('price') as string);
-    const categoryName = formData.get('category') as string; // e.g., "Jersey"
+    const categoryName = formData.get('category') as string;
     const stock = parseInt(formData.get('stock') as string);
     const imageUrl = formData.get('imageUrl') as string;
     const images = formData.get('images') as string | null;
     const features = formData.get('features') as string | null;
     const specs = formData.get('specs') as string | null;
+    const isFeatured = formData.get('isFeatured') === 'true'; // ✅ Added
 
     // 2. Validate
     if (!name || !description || isNaN(price) || !categoryName || isNaN(stock) || !imageUrl) {
@@ -76,7 +77,7 @@ export async function createProduct(formData: FormData) {
         specs: specs && specs !== '[]' ? specs : null,
         categoryId: category.id,
         isActive: true,
-        isFeatured: false,
+        isFeatured, // ✅ Added
       },
     });
 
@@ -105,6 +106,7 @@ export async function updateProduct(formData: FormData) {
     const images = formData.get('images') as string | null;
     const features = formData.get('features') as string | null;
     const specs = formData.get('specs') as string | null;
+    const isFeatured = formData.get('isFeatured') === 'true'; // ✅ Added
 
     // 2. Validate
     if (!id || !name || !description || isNaN(price) || !categoryName || isNaN(stock) || !imageUrl) {
@@ -123,10 +125,8 @@ export async function updateProduct(formData: FormData) {
     const existingProduct = await prisma.product.findUnique({ where: { id } });
     let slug = existingProduct?.slug;
     if (existingProduct && existingProduct.name !== name) {
-      // Name changed – generate a new slug
       slug = await generateUniqueSlug(name);
     } else if (!slug) {
-      // Fallback: generate slug if missing (shouldn't happen)
       slug = await generateUniqueSlug(name);
     }
 
@@ -135,7 +135,7 @@ export async function updateProduct(formData: FormData) {
       where: { id },
       data: {
         name,
-        slug, // update slug if name changed
+        slug,
         description,
         price,
         stock,
@@ -144,6 +144,7 @@ export async function updateProduct(formData: FormData) {
         features: features && features !== '[]' ? features : null,
         specs: specs && specs !== '[]' ? specs : null,
         categoryId: category.id,
+        isFeatured, // ✅ Added
       },
     });
 

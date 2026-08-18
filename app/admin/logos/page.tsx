@@ -1,3 +1,4 @@
+// app/admin/logos/page.tsx
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -10,17 +11,17 @@ interface Logo {
   imageUrl: string;
   order: number;
   isActive: boolean;
+  showName: boolean; // ✅ New field
 }
 
 export default function LogosAdminPage() {
   const [logos, setLogos] = useState<Logo[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Logo | null>(null);
-  const [form, setForm] = useState({ name: '', imageUrl: '', order: 0 });
+  const [form, setForm] = useState({ name: '', imageUrl: '', order: 0, showName: true });
   const [uploading, setUploading] = useState(false);
   const [formError, setFormError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // ✅ Add a ref to always have the latest image URL
   const imageUrlRef = useRef<string>('');
 
   const fetchLogos = async () => {
@@ -43,7 +44,6 @@ export default function LogosAdminPage() {
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (data.success) {
-        // Update both state and the ref
         setForm(prev => ({ ...prev, imageUrl: data.url }));
         imageUrlRef.current = data.url;
       } else {
@@ -64,7 +64,6 @@ export default function LogosAdminPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // ✅ Validate using the ref (latest value) or the state
     const currentImageUrl = imageUrlRef.current || form.imageUrl.trim();
     if (!currentImageUrl) {
       setFormError('Please provide an image URL or upload an image.');
@@ -77,13 +76,17 @@ export default function LogosAdminPage() {
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, imageUrl: currentImageUrl }),
+      body: JSON.stringify({
+        ...form,
+        imageUrl: currentImageUrl,
+        showName: form.showName, // ✅ Send showName
+      }),
     });
     if (res.ok) {
       fetchLogos();
       setEditing(null);
-      setForm({ name: '', imageUrl: '', order: 0 });
-      imageUrlRef.current = ''; // reset ref
+      setForm({ name: '', imageUrl: '', order: 0, showName: true });
+      imageUrlRef.current = '';
     } else {
       const err = await res.json();
       alert(err.error || 'Failed to save logo');
@@ -98,7 +101,12 @@ export default function LogosAdminPage() {
 
   const handleEdit = (logo: Logo) => {
     setEditing(logo);
-    setForm({ name: logo.name, imageUrl: logo.imageUrl, order: logo.order });
+    setForm({
+      name: logo.name,
+      imageUrl: logo.imageUrl,
+      order: logo.order,
+      showName: logo.showName ?? true, // ✅ Default to true if undefined
+    });
     imageUrlRef.current = logo.imageUrl;
     setFormError('');
   };
@@ -170,6 +178,21 @@ export default function LogosAdminPage() {
             />
             <p className="text-xs text-gray-600 mt-1">Lower numbers appear first.</p>
           </div>
+
+          {/* ✅ New: Show/Hide Name Toggle */}
+          <div className="flex items-center gap-3 pt-2">
+            <input
+              type="checkbox"
+              id="showName"
+              checked={form.showName}
+              onChange={(e) => setForm({ ...form, showName: e.target.checked })}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="showName" className="text-sm font-medium text-gray-800 cursor-pointer">
+              Show name under logo
+            </label>
+          </div>
+
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={uploading} className="bg-blue-700 hover:bg-blue-800 text-white font-medium px-6 py-2 rounded-lg transition">
               {editing ? 'Update Logo' : 'Create Logo'}
@@ -179,7 +202,7 @@ export default function LogosAdminPage() {
                 type="button"
                 onClick={() => {
                   setEditing(null);
-                  setForm({ name: '', imageUrl: '', order: 0 });
+                  setForm({ name: '', imageUrl: '', order: 0, showName: true });
                   imageUrlRef.current = '';
                   setFormError('');
                 }}
@@ -206,6 +229,9 @@ export default function LogosAdminPage() {
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900">{logo.name}</p>
                   <p className="text-xs text-gray-500">Order: {logo.order}</p>
+                  <p className="text-xs text-gray-500">
+                    Show name: {logo.showName ? '✅ Yes' : '❌ No'}
+                  </p>
                 </div>
                 <button onClick={() => handleEdit(logo)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition">
                   <PencilIcon className="w-5 h-5" />

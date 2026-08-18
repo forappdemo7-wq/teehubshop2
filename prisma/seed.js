@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 // ─── Category Data ──────────────────────────────────────────────────────
-// ✅ UPDATED: Use singular names to match the form's category dropdown
 const CATEGORIES = [
   { name: 'Jersey', slug: 'jerseys', description: 'Official match jerseys and replicas' },
   { name: 'Pants', slug: 'pants', description: 'Training pants and casual wear' },
@@ -25,6 +24,7 @@ const PRODUCTS = [
     imageUrl: 'https://images.unsplash.com/photo-1574623452334-1e0ac2b3ccb4?w=500',
     features: JSON.stringify(['Breathable mesh fabric', 'Moisture-wicking technology', 'Reinforced stitching']),
     specs: JSON.stringify(['100% Polyester', 'Machine washable', 'Official match fit']),
+    isFeatured: true, // ✅ Mark as featured
   },
   {
     name: 'Pro Training Pants',
@@ -44,7 +44,7 @@ const PRODUCTS = [
     price: 24.99,
     categorySlug: 'shorts',
     stock: 100,
-    imageUrl: 'https://images.unsplash.com/photo-1600185365504-6c0d977f5cb9?w=500',
+    imageUrl: 'https://images.pexels.com/photos/8941581/pexels-photo-8941581.jpeg',
     features: JSON.stringify(['2-in-1 design', 'Phone pocket', 'Anti-chafe technology']),
     specs: JSON.stringify(['82% Polyester, 18% Spandex', 'Machine washable', 'Compression fit']),
   },
@@ -85,16 +85,16 @@ const PRODUCTS = [
 
 // ─── Logo Data ──────────────────────────────────────────────────────────
 const LOGOS = [
-  { name: 'CSK', imageUrl: 'https://img.icons8.com/color/96/chennai-super-kings.png', order: 1 },
-  { name: 'MI', imageUrl: 'https://img.icons8.com/color/96/mumbai-indians.png', order: 2 },
-  { name: 'RCB', imageUrl: 'https://img.icons8.com/color/96/royal-challengers-bangalore.png', order: 3 },
-  { name: 'KKR', imageUrl: 'https://img.icons8.com/color/96/kolkata-knight-riders.png', order: 4 },
-  { name: 'DC', imageUrl: 'https://img.icons8.com/color/96/delhi-capitals.png', order: 5 },
-  { name: 'PBKS', imageUrl: 'https://img.icons8.com/color/96/punjab-kings.png', order: 6 },
-  { name: 'RR', imageUrl: 'https://img.icons8.com/color/96/rajasthan-royals.png', order: 7 },
-  { name: 'SRH', imageUrl: 'https://img.icons8.com/color/96/sunrisers-hyderabad.png', order: 8 },
-  { name: 'GT', imageUrl: 'https://img.icons8.com/color/96/gujarat-titans.png', order: 9 },
-  { name: 'LSG', imageUrl: 'https://img.icons8.com/color/96/lucknow-super-giants.png', order: 10 },
+  { name: 'CSK', imageUrl: 'https://img.icons8.com/color/96/chennai-super-kings.png', order: 1, showName: true },
+  { name: 'MI', imageUrl: 'https://img.icons8.com/color/96/mumbai-indians.png', order: 2, showName: true },
+  { name: 'RCB', imageUrl: 'https://img.icons8.com/color/96/royal-challengers-bangalore.png', order: 3, showName: true },
+  { name: 'KKR', imageUrl: 'https://img.icons8.com/color/96/kolkata-knight-riders.png', order: 4, showName: true },
+  { name: 'DC', imageUrl: 'https://img.icons8.com/color/96/delhi-capitals.png', order: 5, showName: true },
+  { name: 'PBKS', imageUrl: 'https://img.icons8.com/color/96/punjab-kings.png', order: 6, showName: true },
+  { name: 'RR', imageUrl: 'https://img.icons8.com/color/96/rajasthan-royals.png', order: 7, showName: true },
+  { name: 'SRH', imageUrl: 'https://img.icons8.com/color/96/sunrisers-hyderabad.png', order: 8, showName: true },
+  { name: 'GT', imageUrl: 'https://img.icons8.com/color/96/gujarat-titans.png', order: 9, showName: true },
+  { name: 'LSG', imageUrl: 'https://img.icons8.com/color/96/lucknow-super-giants.png', order: 10, showName: true },
 ];
 
 // ─── Main Seed Function ──────────────────────────────────────────────
@@ -155,7 +155,7 @@ async function main() {
         specs: productData.specs || null,
         categoryId: categoryId,
         isActive: true,
-        isFeatured: productData.stock > 30,
+        isFeatured: productData.isFeatured || false, // ✅ Use explicit flag if provided
       },
     });
     console.log(`  ✅ ${productData.name}`);
@@ -166,8 +166,11 @@ async function main() {
   for (const logoData of LOGOS) {
     await prisma.logo.create({
       data: {
-        ...logoData,
+        name: logoData.name,
+        imageUrl: logoData.imageUrl,
+        order: logoData.order,
         isActive: true,
+        showName: logoData.showName ?? true, // ✅ New field
       },
     });
     console.log(`  ✅ ${logoData.name}`);
