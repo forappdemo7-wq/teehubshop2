@@ -66,7 +66,7 @@ export default async function ProductPage({ params }: PageProps) {
   const isOutOfStock = product.stock === 0;
 
   const relatedProducts = await prisma.product.findMany({
-    where: { category: product.category, id: { not: product.id } },
+  where: { categoryId: product.categoryId, id: { not: product.id } },
     take: 4,
     orderBy: { createdAt: 'desc' },
   });
