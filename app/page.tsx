@@ -53,36 +53,19 @@ export default async function Home({ searchParams }: PageProps) {
     const categoryParam = params.category;
     const searchQuery = params.q?.toLowerCase() || '';
 
-    // ─── Optimised product query ──────────────────────────────────
+    // ─── Fetch all products with full fields (include) ──────────────
     const products = await prisma.product.findMany({
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        price: true,
-        imageUrl: true,
-        stock: true,
-        createdAt: true,
-        category: {
-          select: { name: true },
-        },
+      include: {
+        category: true,  // Get full category object
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    // ─── Featured products ──────────────────────────────────────
+    // ─── Featured products with full fields ──────────────────────
     const featuredProducts = await prisma.product.findMany({
       where: { isFeatured: true },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        price: true,
-        imageUrl: true,
-        category: {
-          select: { name: true },
-        },
+      include: {
+        category: true,
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -99,7 +82,7 @@ export default async function Home({ searchParams }: PageProps) {
       },
     });
 
-    // ─── Map products to a plain `category` string ──────────────
+    // ─── Map products to add a plain `category` string ──────────────
     const productsWithCategory = products.map(product => ({
       ...product,
       category: product.category?.name || 'Uncategorized',
@@ -245,7 +228,7 @@ export default async function Home({ searchParams }: PageProps) {
         {teamLogos.length > 0 && (
           <section 
             className="py-8 overflow-hidden transition-colors duration-500" 
-            style={{ backgroundColor: 'var(--color-card-bg)' }}  // ✅ Dynamic marquee background
+            style={{ backgroundColor: 'var(--color-card-bg)' }}
           >
             <div className="max-w-7xl mx-auto px-4 mb-4 text-center">
               <p 
@@ -257,7 +240,6 @@ export default async function Home({ searchParams }: PageProps) {
             </div>
 
             <div className="relative overflow-hidden">
-              {/* ✅ Dynamic fade overlays using card background */}
               <div 
                 className="absolute left-0 top-0 bottom-0 w-24 z-10 pointer-events-none transition-colors duration-500"
                 style={{ background: `linear-gradient(to right, var(--color-card-bg), transparent)` }}
@@ -273,8 +255,8 @@ export default async function Home({ searchParams }: PageProps) {
                     key={idx} 
                     className="flex-shrink-0 flex items-center gap-3 px-5 py-3 rounded-2xl border transition-all duration-500 shadow-sm hover:scale-105"
                     style={{ 
-                      backgroundColor: '#f9fafb',              // ✅ Fixed light gray card background
-                      borderColor: 'var(--color-primary)',    // ✅ Dynamic border
+                      backgroundColor: '#f9fafb',
+                      borderColor: 'var(--color-primary)',
                     }}
                   >
                     <div className="w-10 h-10 relative flex items-center justify-center">
@@ -289,7 +271,7 @@ export default async function Home({ searchParams }: PageProps) {
                     {logo.showName && (
                       <span 
                         className="text-xs font-bold uppercase tracking-tight transition-colors duration-500"
-                        style={{ color: 'var(--color-text)' }}   // ✅ Dynamic text
+                        style={{ color: 'var(--color-text)' }}
                       >
                         {logo.name}
                       </span>
